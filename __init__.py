@@ -55,6 +55,8 @@ class BigscreenPlatform(MycroftSkill):
             'mycroft.gui.screen.close', self.close_window_by_event)
         self.add_event('mycroft.gui.screen.close', self.close_window_by_event)
         self.bus.on('mycroft.gui.screen.close', self.close_window_by_event)
+        self.add_event('mycroft.gui.force.screenclose', self.close_window_by_force)
+        self.bus.on('mycroft.gui.force.screenclose', self.close_window_by_force)
 
         try:
             self.bus.on('gui.page.show', self.on_gui_page_show)
@@ -67,7 +69,8 @@ class BigscreenPlatform(MycroftSkill):
         self.bus.remove('gui.page.show', self.on_gui_page_show)
         self.bus.remove('gui.page_interaction', self.on_gui_page_interaction)
         self.bus.remove('mycroft.gui.screen.close', self.close_window_by_event)
-        
+        self.bus.remove('mycroft.gui.force.screenclose', self.close_window_by_force)
+
     def override(self, message=None):
         """Override the resting screen.
         Arguments:
@@ -152,8 +155,16 @@ class BigscreenPlatform(MycroftSkill):
 
     def close_window_by_event(self, message):
         self.interaction_without_idle = False
+        #self.log.info("Got Screen Exit CMD")
         self.bus.emit(Message('screen.close.idle.event', 
                               data={"skill_idle_event_id": self.interaction_skill_id}))
+
+    def close_window_by_force(self, message):
+        skill_id_from_message = message.data["skill_id"]
+        #self.log.info(skill_id_from_message, "sent a force close request")
+        self.bus.emit(Message('screen.close.idle.event', 
+                              data={"skill_idle_event_id": skill_id_from_message}))
+
 
 def create_skill():
     return BigscreenPlatform()
